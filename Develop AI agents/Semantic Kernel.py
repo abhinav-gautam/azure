@@ -2,16 +2,11 @@ import os
 import asyncio
 from pathlib import Path
 
-from semantic_kernel.agents.azure_ai import AzureAIAgent, AzureAIAgentSettings
-from azure.identity.aio import DefaultAzureCredential
+from azure.identity.aio import AzureCliCredential
+from agent_framework import ChatAgent
+from agent_framework.azure import AzureAIAgentClient
 from pydantic import Field
 from typing import Annotated
-from dotenv import load_dotenv
-
-load_dotenv()
-
-PROJECT_ENDPOINT = os.getenv("AZURE_AI_AGENT_ENDPOINT")
-AZURE_AI_MODEL_DEPLOYMENT_NAME = os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME")
 
 
 async def main():
@@ -34,31 +29,18 @@ async def main():
 
 
 async def process_expense_data(prompt, expenses_data):
-    agent_settings = AzureAIAgentSettings.create(
-        endpoint=PROJECT_ENDPOINT, model_deployment_name=AZURE_AI_MODEL_DEPLOYMENT_NAME
-    )
     # Create a chat agent
     async with (
-        DefaultAzureCredential() as cred,
-        AzureAIAgent.create_client(
-            credential=cred,
-        ) as client,
-    ):
-
-        print("COMING HERE")
-        # Define am agent on the Azure AI agent service
-        agent_definition = await client.agents.create_agent(
-            model=AzureAIAgentSettings().model_deployment_name,
-            name="expense-agent",
+        AzureCliCredential() as cred,
+        ChatAgent(
+            chat_client=AzureAIAgentClient(async_credential=cred),
+            name="expenses_agent",
             instructions="""You are an AI assistant for expense claim submission.
                         When a user submits expenses data and requests an expense claim, use the plug-in function to send an email to expenses@contoso.com with the subject 'Expense Claim`and a body that contains itemized expenses with a total.
                         Then confirm to the user that you've done so.""",
-            # tools=[send_email],
-        )
-        # Create a Semantic Kernel agent based on the agent definition
-        agent = AzureAIAgent(
-            client=client, definition=agent_definition, settings=agent_settings
-        )
+            tools=send_email,
+        ) as agent,
+    ):
 
         # Use the agent to process the expenses data
         try:
@@ -66,7 +48,7 @@ async def process_expense_data(prompt, expenses_data):
             prompt_messages = [f"{prompt}: {expenses_data}"]
 
             # Invoke the agent for the specified thread with the messages
-            response = await agent.get_response(prompt_messages)
+            response = await agent.run(prompt_messages)
 
             # Display the response
             print(f"\n# Agent:\n{response}")
