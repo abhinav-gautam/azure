@@ -2,3 +2,4 @@ python-dotenv
 azure-identity
 azure-ai-projects
 agent-framework
+a2a-sdk
