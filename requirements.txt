@@ -3,3 +3,4 @@ azure-identity
 azure-ai-projects
 agent-framework
 a2a-sdk
+azure-ai-textanalytics==5.3.0
