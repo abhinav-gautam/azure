@@ -8,3 +8,5 @@ azure-ai-language-questionanswering
 azure-ai-language-conversations==1.1.0
 azure-ai-translation-text==1.0.1
 azure-cognitiveservices-speech==1.42.0
+azure-ai-vision-imageanalysis==1.0.0
+azure-ai-vision-face==1.0.0b2
